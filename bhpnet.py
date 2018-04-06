@@ -156,4 +156,64 @@ def run_command():
   # send output to client
   return output
 
+def client_handler(client_socket):
+  global upload
+  global execute
+  global command
+
+  # confirm fileupload is selected or not
+  if len(upload_destination):
+
+    # read all data and write to file selected
+    file_buffer = ''
+
+    # continue receving data until received data is end
+    while True:
+      data = client_socket.recv(1024)
+
+      if len(data) == 0:
+        break
+      else:
+        file_buffer += data
+
+    # write received data to file
+    try:
+      file_descriptor = open(upload_destinatin, 'wb')
+      file_descriptor.write(file_buffer)
+      file_descriptor.close()
+
+      # notify succeed or failed to write
+      client_socket.send('Successfully saved file to %s\r\n' % upload_destination)
+
+    except:
+      client_socket.send('Failed to save file to %s\r\n' % upload_destination)
+
+  # confirm command is selected or not
+  if len(execute):
+
+    # execute command
+    output = run_command(execute)
+
+    client_socket.send(output)
+
+  # processing in case that shell is selected
+  if command:
+
+    # print prompt
+    prompt = '<BHP:#>'
+    client_socket.send(prompt)
+
+    while True:
+
+      # receive data while receive new line
+      cmd_buffer = ''
+      while '\n' not in cmd_buffer:
+        cmd_buffer += client_socket.recv(1024)
+
+      # get executed result
+      response = run_command(cmd_buffer)
+      response += prompt
+
+      # send executed result
+      client_socket.send(response)
 
