@@ -19,3 +19,17 @@ def server_loop(local_host, local_port, remote_host, remote_port, receive_first)
 
   server.listen(5)
 
+  while True:
+    client_socket, addr = server.accept()
+
+    # print info from local connection source
+    print '[==>] Received incoming connection from %s:%d' % (addr[0], addr[1])
+
+    # start thread to connect remote host
+    proxy_thread = threading.Thread(target=proxy_handler, args=(client_socket, remote_host, remote_port, receive_first))
+
+    proxy_thread.start()
+
+def main():
+
+  if len(sys.argv[1:]) != 5:
